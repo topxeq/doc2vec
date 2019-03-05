@@ -4,17 +4,18 @@ import (
 	"bufio"
 	_ "errors"
 	"fmt"
-    "github.com/lokicui/doc2vec-golang/common"
 	"log"
 	"math"
 	"os"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/topxeq/doc2vec/common"
 )
 
 const (
-	VOCAB_HASH_SIZE int = 30000000   //3kw, 30M
+	VOCAB_HASH_SIZE int = 30000000 //3kw, 30M
 )
 
 func (p *TCorpusImpl) GetWordIdx(word string) (idx int32, ok bool) {
@@ -225,10 +226,10 @@ func (p *TCorpusImpl) addWord(word string) (err error) {
 func (p *TCorpusImpl) loadAsWords(docid string, content string) int {
 	items := strings.Split(content, " ")
 	for _, word := range items {
-        word = common.SBC2DBC(word)
+		word = common.SBC2DBC(word)
 		p.addWord(word)
 		if len(p.Word2Idx) > int(0.7*float32(VOCAB_HASH_SIZE)) {
-            log.Printf("%d > %d, start reduceVocabulary\n", len(p.Word2Idx), VOCAB_HASH_SIZE)
+			log.Printf("%d > %d, start reduceVocabulary\n", len(p.Word2Idx), VOCAB_HASH_SIZE)
 			p.reduceVocabulary()
 		}
 	}
@@ -238,7 +239,7 @@ func (p *TCorpusImpl) loadAsWords(docid string, content string) int {
 func (p *TCorpusImpl) Transform(content string) (wordsidx []int32) {
 	items := strings.Split(content, " ")
 	for _, word := range items {
-        word = common.SBC2DBC(word)
+		word = common.SBC2DBC(word)
 		idx, ok := p.Word2Idx[word]
 		if ok {
 			wordsidx = append(wordsidx, int32(idx))
@@ -251,18 +252,18 @@ func (p *TCorpusImpl) loadAsDoc(docid string, content string) int {
 	items := strings.Split(content, " ")
 	wordsIdx := make([]int32, 0, len(items))
 	for _, word := range items {
-        word = common.SBC2DBC(word)
+		word = common.SBC2DBC(word)
 		idx, ok := p.Word2Idx[word]
 		if ok {
 			wordsIdx = append(wordsIdx, int32(idx))
 		}
 	}
-    if idx, ok := p.Doc2Idx[docid]; ok {
-        p.Doc2WordsIdx[idx] = wordsIdx   // exists, update
-    } else {
-        p.Doc2WordsIdx = append(p.Doc2WordsIdx, wordsIdx)
-        p.Doc2Idx[docid] = int32(len(p.Doc2WordsIdx) - 1)
-    }
+	if idx, ok := p.Doc2Idx[docid]; ok {
+		p.Doc2WordsIdx[idx] = wordsIdx // exists, update
+	} else {
+		p.Doc2WordsIdx = append(p.Doc2WordsIdx, wordsIdx)
+		p.Doc2Idx[docid] = int32(len(p.Doc2WordsIdx) - 1)
+	}
 	return 1
 }
 
@@ -296,7 +297,7 @@ func (p *TCorpusImpl) buildVocabulary(fname string) (err error) {
 		batch += cnt
 		if batch >= 10000000 {
 			batch = 0
-            log.Printf("train %d words, vocab_size:%d\n", train_words, p.GetVocabCnt())
+			log.Printf("train %d words, vocab_size:%d\n", train_words, p.GetVocabCnt())
 		}
 	}
 	if err := scanner.Err(); err != nil {
@@ -351,7 +352,7 @@ func (p *TCorpusImpl) loadDocument(fname string) (err error) {
 		cnt := p.loadAsDoc(docid, content)
 		train_docs += cnt
 		if train_docs%100000 == 0 {
-            log.Printf("train %d docs, doc_size:%d\n", train_docs, p.GetDocCnt())
+			log.Printf("train %d docs, doc_size:%d\n", train_docs, p.GetDocCnt())
 		}
 	}
 	if err := scanner.Err(); err != nil {
@@ -370,10 +371,10 @@ func (p *TCorpusImpl) Build(fname string) (err error) {
 
 func NewCorpus() ICorpus {
 	self := &TCorpusImpl{
-		Word2Idx: make(map[string]int32),
-		Doc2Idx:  make(map[string]int32),
-        MinReduce: 1,
-		MinCnt:   1,
-    }
+		Word2Idx:  make(map[string]int32),
+		Doc2Idx:   make(map[string]int32),
+		MinReduce: 1,
+		MinCnt:    1,
+	}
 	return ICorpus(self)
 }

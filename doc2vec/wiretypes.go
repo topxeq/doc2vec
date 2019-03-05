@@ -3,8 +3,8 @@ package doc2vec
 import (
 	"sync"
 
-	"github.com/lokicui/doc2vec-golang/corpus"
-	"github.com/lokicui/doc2vec-golang/neuralnet"
+	"github.com/topxeq/doc2vec/corpus"
+	"github.com/topxeq/doc2vec/neuralnet"
 )
 
 //go:generate msgp

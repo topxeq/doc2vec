@@ -14,10 +14,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lokicui/doc2vec-golang/common"
-	"github.com/lokicui/doc2vec-golang/corpus"
-	"github.com/lokicui/doc2vec-golang/neuralnet"
 	"github.com/tinylib/msgp/msgp"
+	"github.com/topxeq/doc2vec/common"
+	"github.com/topxeq/doc2vec/corpus"
+	"github.com/topxeq/doc2vec/neuralnet"
 )
 
 var _ = sort.Sort
