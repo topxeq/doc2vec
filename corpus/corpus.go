@@ -308,6 +308,43 @@ func (p *TCorpusImpl) buildVocabulary(fname string) (err error) {
 	return err
 }
 
+func (p *TCorpusImpl) buildVocabularyFromString(strA string) (err error) {
+	// file, err := os.Open(fname)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// defer file.Close()
+
+	file := strings.NewReader(strA)
+
+	scanner := bufio.NewScanner(file)
+	scanner.Buffer([]byte{}, bufio.MaxScanTokenSize*100)
+	train_words := 0
+	batch := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		items := strings.Split(line, "\t")
+		if len(items) < 2 {
+			log.Printf("len(items)=%d\n", len(items))
+			continue
+		}
+		docid, content := items[0], items[1]
+		cnt := p.loadAsWords(docid, content)
+		train_words += cnt
+		batch += cnt
+		if batch >= 10000000 {
+			batch = 0
+			log.Printf("train %d words, vocab_size:%d\n", train_words, p.GetVocabCnt())
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+	p.sortVocab()
+	p.createBinaryTree()
+	return err
+}
+
 func (p *TCorpusImpl) sortVocab() {
 	//先排序
 	// Words occuring less than min_count times will be discarded from the vocab
@@ -361,12 +398,52 @@ func (p *TCorpusImpl) loadDocument(fname string) (err error) {
 	return err
 }
 
+func (p *TCorpusImpl) loadDocumentFromString(strA string) (err error) {
+
+	file := strings.NewReader(strA)
+
+	scanner := bufio.NewScanner(file)
+	scanner.Buffer([]byte{}, bufio.MaxScanTokenSize*100)
+	train_docs := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		items := strings.Split(line, "\t")
+		if len(items) < 2 {
+			log.Printf("len(items)=%d\n", len(items))
+			continue
+		}
+		docid, content := items[0], items[1]
+		docid = strings.Trim(docid, " \n")
+		content = strings.Trim(content, " \n")
+		if len(content) == 0 || len(docid) == 0 {
+			continue
+		}
+		cnt := p.loadAsDoc(docid, content)
+		train_docs += cnt
+		if train_docs%100000 == 0 {
+			log.Printf("train %d docs, doc_size:%d\n", train_docs, p.GetDocCnt())
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return err
+}
+
 func (p *TCorpusImpl) Build(fname string) (err error) {
 	err = p.buildVocabulary(fname)
 	if err != nil {
 		return err
 	}
 	return p.loadDocument(fname)
+}
+
+func (p *TCorpusImpl) BuildFromString(strA string) (err error) {
+	err = p.buildVocabularyFromString(strA)
+	if err != nil {
+		return err
+	}
+	return p.loadDocumentFromString(strA)
 }
 
 func NewCorpus() ICorpus {

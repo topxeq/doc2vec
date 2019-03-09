@@ -18,6 +18,7 @@ type TSortItemSlice []*SortItem
 
 type IDoc2Vec interface {
 	Train(fname string)
+	TrainFromString(strA string)
 	GetCorpus() corpus.ICorpus
 	GetNeuralNet() neuralnet.INeuralNet
 	SaveModel(fname string) (err error)
@@ -38,6 +39,8 @@ type IDoc2Vec interface {
 	GetLikelihood4Doc(context string) (likelihood float64)
 	GetLeaveOneOutKwds(content string, iters int)
 	DocSimCal(content1 string, content2 string) (dis float64)
+	GetDim() int
+	GetRound() int
 }
 
 type TDoc2VecImpl struct {

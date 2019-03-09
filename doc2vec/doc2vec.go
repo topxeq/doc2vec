@@ -7,7 +7,6 @@ import (
 	"log"
 	"math"
 	"os"
-	"reflect"
 	"regexp"
 	"sort"
 	"strings"
@@ -264,6 +263,22 @@ func (p *TDoc2VecImpl) Train(fname string) {
 	}
 }
 
+func (p *TDoc2VecImpl) TrainFromString(strA string) {
+	p.Trainfile = ""
+
+	p.Corpus.BuildFromString(strA)
+
+	if p.UseNEG {
+		p.initUnigramTable()
+	}
+	p.NN = neuralnet.NewNN(p.Corpus.GetDocCnt(), p.Corpus.GetVocabCnt(), p.Dim, p.UseHS, p.UseNEG)
+	if p.UseCbow {
+		p.trainCbow()
+	} else {
+		p.trainSkipGram()
+	}
+}
+
 func (p *TDoc2VecImpl) SaveModel(fname string) (err error) {
 	fd, err := os.Create(fname)
 	if err != nil {
@@ -273,7 +288,6 @@ func (p *TDoc2VecImpl) SaveModel(fname string) (err error) {
 	writer := msgp.NewWriter(fd)
 	err = p.EncodeMsg(writer)
 	if err == nil {
-		//你大爷 必须Flush, 不然即便你调用了Close()也无济于事
 		writer.Flush()
 	}
 	return
@@ -685,9 +699,9 @@ func (p *TDoc2VecImpl) trainSkipGram() {
 				if last_trained_words > PROGRESS_BAR_THRESHOLD {
 					last_trained_words = 0
 					alpha = p.getTrainAlpha()
-					fmt.Printf("%cSkip-Gram Iter:%v Alpha: %f  Progress: %.2f%%  Words/sec: %.2fk  ", 13, i, alpha,
-						float64(p.TrainedWords)/float64(p.Iters*p.Corpus.GetWordsCnt()+1)*100,
-						float64(p.TrainedWords)/float64(time.Since(stime))*100*1000)
+
+					_ = fmt.Sprintf("%cSkip-Gram Iter:%v Alpha: %f  Progress: %.2f%%  Words/sec: %.2fk  ", 13, i, alpha, float64(p.TrainedWords)/float64(p.Iters*p.Corpus.GetWordsCnt()+1)*100, float64(p.TrainedWords)/float64(time.Since(stime))*100*1000)
+					// fmt.Printf("%cSkip-Gram Iter:%v Alpha: %f  Progress: %.2f%%  Words/sec: %.2fk  ", 13, i, alpha, float64(p.TrainedWords)/float64(p.Iters*p.Corpus.GetWordsCnt()+1)*100, float64(p.TrainedWords)/float64(time.Since(stime))*100*1000)
 				}
 				dsyn0 := p.NN.GetDSyn0(int32(docidx))
 				p.trainSkipGram4Document(wordsidx, dsyn0, alpha, false)
@@ -695,7 +709,7 @@ func (p *TDoc2VecImpl) trainSkipGram() {
 		}
 		wg.Wait()
 	}
-	fmt.Printf("\n%v training end, %v %v\n", time.Now(), p.TrainedWords, p.Corpus.GetWordsCnt())
+	// fmt.Printf("\n%v training end, %v %v\n", time.Now(), p.TrainedWords, p.Corpus.GetWordsCnt())
 }
 
 // P(w|Context(w))
@@ -854,6 +868,14 @@ func (p *TDoc2VecImpl) Word2Words(word string) {
 	p.findKNNWordsByVector(vector)
 }
 
+func (p *TDoc2VecImpl) GetDim() int {
+	return p.Dim
+}
+
+func (p *TDoc2VecImpl) GetRound() int {
+	return p.Iters
+}
+
 func (p *TDoc2VecImpl) TXWord2Words(word string, limit int, outWordsA map[string]int) []string {
 	idx, ok := p.Corpus.GetWordIdx(word)
 	if !ok {
@@ -945,7 +967,7 @@ func (p *TDoc2VecImpl) TXDoc2Words(content string, iters int, limit int, outWord
 
 func (p *TDoc2VecImpl) InferDoc(content string, iters int) (rs []float32) {
 	vector := p.FitDoc(content, iters)
-	fmt.Println(reflect.TypeOf(vector))
+	// fmt.Println(reflect.TypeOf(vector))
 	return *vector
 }
 
