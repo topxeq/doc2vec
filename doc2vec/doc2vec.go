@@ -756,7 +756,7 @@ func (p *TDoc2VecImpl) trainSkipGram() {
 					alpha = p.getTrainAlpha()
 
 					_ = fmt.Sprintf("%cSkip-Gram Iter:%v Alpha: %f  Progress: %.2f%%  Words/sec: %.2fk  ", 13, i, alpha, float64(p.TrainedWords)/float64(p.Iters*p.Corpus.GetWordsCnt()+1)*100, float64(p.TrainedWords)/float64(time.Since(stime))*100*1000)
-					// fmt.Printf("%cSkip-Gram Iter:%v Alpha: %f  Progress: %.2f%%  Words/sec: %.2fk  ", 13, i, alpha, float64(p.TrainedWords)/float64(p.Iters*p.Corpus.GetWordsCnt()+1)*100, float64(p.TrainedWords)/float64(time.Since(stime))*100*1000)
+					fmt.Printf("%cSkip-Gram Iter:%v Alpha: %f  Progress: %.2f%%  Words/sec: %.2fk  ", 13, i, alpha, float64(p.TrainedWords)/float64(p.Iters*p.Corpus.GetWordsCnt()+1)*100, float64(p.TrainedWords)/float64(time.Since(stime))*100*1000)
 				}
 				dsyn0 := p.NN.GetDSyn0(int32(docidx))
 				p.trainSkipGram4Document(wordsidx, dsyn0, alpha, false)
